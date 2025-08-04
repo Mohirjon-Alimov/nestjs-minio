@@ -1,29 +1,36 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Post, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { MinioService } from '../minio/Minio.service';
-import { defineBase64ImageExtension } from '../utils';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 
 @Controller('images')
 export class ImagesController {
   constructor(private readonly minioService: MinioService) {}
 
   @Post('upload')
-  async uploadImage(@Body() body: { encodedImage: string; filename: string }) {
-    const { encodedImage, filename } = body;
-    const extensionName = defineBase64ImageExtension(encodedImage);
-
-    if (!extensionName) throw new Error('Wrong file extension');
-
-    const objectName = await this.minioService.uploadBase64Image(encodedImage, filename, extensionName);
-    return {
-      success: true,
-      objectName,
-      message: 'Image uploaded successfully',
-    };
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return await this.minioService.uploadFile(file);
   }
 
-  @Get(':filename')
-  async getImageUrl(@Param('filename') filename: string) {
-    const url = await this.minioService.getImageUrl(filename);
-    return { url };
+  @Get(':fileName')
+  async getImage(@Param('fileName') fileName: string, @Res({ passthrough: true }) res: Response) {
+    try {
+      const fileStream = await this.minioService.getFile(fileName).catch(err => console.log(1234, err, 4312));
+
+      if (!fileStream) {
+        // todo: change format to response service
+        return 'file not found';
+      }
+
+      res.set({
+        'Content-Type': fileStream.metaData.metaData['content-type'] || 'application/octet-stream',
+        'Content-Length': fileStream.metaData.size.toString(),
+      });
+
+      return new StreamableFile(fileStream.stream);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

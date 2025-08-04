@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
+import { Readable } from 'node:stream';
 
 @Injectable()
 export class MinioService {
@@ -16,31 +17,33 @@ export class MinioService {
     });
 
     this.bucketName = process.env.MINIO_BUCKET_NAME || 'images';
-    this.initializeBucket().then();
+    this.initializeBucket().catch(err => console.log('init error', err));
   }
 
   private async initializeBucket() {
     const bucketExists = await this.minioClient.bucketExists(this.bucketName);
     if (!bucketExists) {
-      await this.minioClient.makeBucket(this.bucketName, 'us-east-1');
+      await this.minioClient.makeBucket(this.bucketName);
     }
   }
 
-  async uploadBase64Image(base64Data: string, fileName: string, extensionName: string): Promise<string> {
-    const buffer = Buffer.from(base64Data, 'base64');
-
+  async uploadFile(file: Express.Multer.File) {
     const metaData = {
-      'Content-Type': `image/${extensionName}`,
+      'Content-Type': file.mimetype,
     };
 
-    const result = await this.minioClient.putObject(this.bucketName, fileName, buffer, null, metaData);
+    await this.minioClient.putObject(this.bucketName, file.originalname, file.buffer, file.size, metaData);
 
-    console.log(11, result, 22);
-
-    return fileName;
+    return file.originalname;
   }
 
-  async getImageUrl(objectName: string): Promise<string> {
-    return this.minioClient.presignedUrl('GET', this.bucketName, objectName, 999);
+  async getFile(fileName: string): Promise<{ stream: Readable; metaData: Minio.BucketItemStat }> {
+    const metaData = await this.minioClient.statObject(this.bucketName, fileName);
+    const stream = await this.minioClient.getObject(this.bucketName, fileName);
+    return { stream, metaData };
+  }
+
+  async deleteFile(fileName: string): Promise<void> {
+    await this.minioClient.removeObject(this.bucketName, fileName);
   }
 }
