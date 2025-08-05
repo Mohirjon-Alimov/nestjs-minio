@@ -1,97 +1,214 @@
+# MinIO File Storage API with NestJS
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A file storage service using MinIO object storage with NestJS backend API.
 
-## Project setup
+## Table of Contents
 
-```bash
-$ npm install
-```
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+    - [MinIO Server Setup](#minio-server-setup)
+    - [Project Setup](#project-setup)
+- [Configuration](#-configuration)
+- [API Endpoints](#-api-endpoints)
+- [Running the Project](#-running-the-project)
+- [Deployment](#-deployment)
+- [Troubleshooting](#-troubleshooting)
 
-## Compile and run the project
+## 🛠 Prerequisites
 
-```bash
-# development
-$ npm run start
+- Node.js v18+
+- npm
+- Docker (optional)
+- MinIO server (instructions below)
 
-# watch mode
-$ npm run start:dev
+## 📥 Installation
 
-# production mode
-$ npm run start:prod
-```
+### MinIO Server Setup
 
-## Run tests
+#### Option 1: Docker (Recommended)
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker run -d \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  --name minio \
+  -e "MINIO_ROOT_USER=MINIO_ACCESS_KEY" \
+  -e "MINIO_ROOT_PASSWORD=MINIO_SECRET_KEY" \
+  -v minio_data:/data \
+  minio/minio server /data --console-address ":9001"
 ```
 
-## Deployment
+#### Option 2: Native Installation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+##### Linux/macOS:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+
+wget https://dl.min.io/server/minio/release/linux-amd64/minio
+chmod +x minio
+sudo mv minio /usr/local/bin/
+mkdir ~/miniodata
+minio server ~/miniodata --console-address ":9001"
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+##### Windows (PowerShell):
 
-## Resources
+```powershell
 
-Check out a few resources that may come in handy when working with NestJS:
+Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "$env:USERPROFILE\minio.exe"
+mkdir $env:USERPROFILE\miniodata
+$env:USERPROFILE\minio.exe server $env:USERPROFILE\miniodata --console-address ":9001"
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Project Setup
 
-## Support
+#### 1. Clone repository:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
 
-## Stay in touch
+git clone https://github.com/your-repo/file-storage-api.git
+cd file-storage-api
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+#### 2. Install dependencies:
+
+```bash
+
+npm install
+```
+
+#### 3. Configure environment:
+
+```bash
+
+cp .env.example .env
+```
+
+#### 4. Edit .env file with your credentials.
+
+## ⚙️ Configuration
+
+#### Edit .env file:
+
+```ini
+
+# MinIO Configuration
+MINIO_PORT=9000             # MinIO server port
+MINIO_ENDPOINT=localhost    # MinIO server host
+MINIO_ACCESS_KEY=           # MinIO access key (min 3 chars)
+MINIO_SECRET_KEY=           # MinIO secret key (min 8 chars)
+MINIO_BUCKET_NAME=files     # Default bucket name
+MINIO_USE_SSL=true          # MinIO ssl
+
+# App Configuration
+PORT=3001                   # API server port
+NODE_ENV=development        # Node environment
+```
+
+## 🌐 API Endpoints
+
+| Method	 | Endpoint	          | Description     |
+|---------|--------------------|-----------------|
+| POST	   | /images/upload	    | Upload a image  |
+| GET	    | /images/:filename	 | Download a file |
+
+#### Example upload request:
+
+```bash
+
+curl -X POST -F "file=@test.jpg" http://localhost:3001/files/upload
+```
+
+## 🚀 Running the Project
+
+#### Development mode:
+
+```bash
+
+npm run start:dev
+```
+
+#### Production mode:
+
+```bash
+
+npm run build
+npm run start:prod
+```
+
+#### Using Docker:
+
+```bash
+
+docker-compose up --build
+```
+
+## 🐳 Deployment
+
+#### Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: MINIO_ACCESS_KEY
+      MINIO_ROOT_PASSWORD: MINIO_SECRET_KEY
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    depends_on:
+      - minio
+
+volumes:
+  minio_data:
+```
+
+## 🔧 Troubleshooting
+
+### MinIO connection issues:
+
+1. Verify MinIO is running at http://localhost:9001
+
+2. Check credentials in .env match MinIO credentials
+
+3. For Docker: Ensure containers are on same network
+
+### File upload problems:
+
+* Check bucket exists in MinIO console
+
+* Verify file size limits (default: 10MB)
+
+### Common errors:
+
+```log
+
+Error: Access Denied
+```
+
+Solution: Verify `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are correct
 
 ## License
 
