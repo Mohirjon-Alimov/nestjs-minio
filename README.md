@@ -73,8 +73,8 @@ $env:USERPROFILE\minio.exe server $env:USERPROFILE\miniodata --console-address "
 
 ```bash
 
-git clone https://github.com/your-repo/file-storage-api.git
-cd file-storage-api
+git clone https://github.com/Mohirjon-Alimov/nestjs-minio
+cd nestjs-minio
 ```
 
 #### 2. Install dependencies:
